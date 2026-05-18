@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Notes</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+          --bg: #0f0f0f;
+          --surface: #1a1a1a;
+          --surface2: #222;
+          --border: #2a2a2a;
+          --accent: #f0c040;
+          --text: #f0f0f0;
+          --muted: #666;
+          --danger: #ff4d4d;
+          --radius: 10px;
+        }
+
+        body {
+          font-family: 'DM Sans', sans-serif;
+          background: var(--bg);
+          color: var(--text);
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 48px 16px;
+        }
+
+        .container { width: 100%; max-width: 860px; }
+
+        header { margin-bottom: 36px; }
+        header h1 {
+          font-family: 'DM Mono', monospace;
+          font-size: 2rem;
+          font-weight: 500;
+          letter-spacing: -1px;
+          color: var(--accent);
+        }
+        header p { color: var(--muted); font-size: 0.85rem; margin-top: 4px; }
+
+        /* ── Auth ── */
+        .card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 28px;
+          margin-bottom: 16px;
+          max-width: 480px;
+          margin-left: auto;
+          margin-right: auto;
+        }
+        .card h2 {
+          font-size: 0.85rem;
+          font-weight: 600;
+          margin-bottom: 20px;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          font-family: 'DM Mono', monospace;
+        }
+
+        .field { margin-bottom: 14px; }
+        .field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+        input[type="email"], input[type="password"], input[type="text"], textarea {
+          width: 100%;
+          background: var(--bg);
+          border: 1px solid var(--border);
+          border-radius: 6px;
+          color: var(--text);
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.95rem;
+          padding: 10px 14px;
+          outline: none;
+          transition: border-color 0.2s;
+        }
+        input:focus, textarea:focus { border-color: var(--accent); }
+        textarea { resize: vertical; min-height: 100px; }
+
+        .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 0.9rem;
+          font-weight: 500;
+          padding: 10px 18px;
+          transition: opacity 0.15s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary { background: var(--accent); color: #0f0f0f; width: 100%; margin-top: 4px; }
+        .btn-primary:hover { opacity: 0.88; }
+        .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); font-size: 0.8rem; padding: 6px 12px; }
+        .btn-ghost:hover { color: var(--text); border-color: var(--text); }
+        .btn-danger { background: transparent; color: var(--danger); border: 1px solid transparent; padding: 4px 8px; font-size: 0.8rem; }
+        .btn-danger:hover { border-color: var(--danger); }
+        .btn-sm { padding: 6px 12px; font-size: 0.8rem; background: var(--accent); color: #0f0f0f; }
+
+        .switch-link { text-align: center; margin-top: 14px; font-size: 0.82rem; color: var(--muted); }
+        .switch-link span { color: var(--accent); cursor: pointer; }
+        .switch-link span:hover { text-decoration: underline; }
+
+        .error-msg {
+          background: #2a1111;
+          border: 1px solid #5a2020;
+          border-radius: 6px;
+          color: #ff8080;
+          font-size: 0.82rem;
+          padding: 8px 12px;
+          margin-top: 10px;
+          display: none;
+        }
+        .error-msg.visible { display: block; }
+
+        /* ── App layout ── */
+        #app { display: none; }
+
+        .topbar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 24px;
+        }
+        .topbar .user-info { font-size: 0.82rem; color: var(--muted); }
+        .topbar .user-info span { color: var(--text); font-weight: 500; }
+
+        /* ── Search & filters ── */
+        .toolbar {
+          display: flex;
+          gap: 8px;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+        }
+        .toolbar input { flex: 1; min-width: 160px; }
+        .toolbar .btn { white-space: nowrap; }
+
+        /* ── Two column layout ── */
+        .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 640px) { .layout { grid-template-columns: 1fr; } }
+
+        /* ── Note list ── */
+        #note-list { display: flex; flex-direction: column; gap: 10px; }
+
+        .note-card {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 16px;
+          cursor: pointer;
+          transition: border-color 0.2s;
+          animation: fadeIn 0.2s ease;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+        .note-card:hover { border-color: var(--accent); }
+        .note-card.active { border-color: var(--accent); background: var(--surface2); }
+
+        .note-card-title { font-weight: 600; font-size: 0.95rem; margin-bottom: 6px; }
+        .note-card-preview { font-size: 0.82rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px; }
+        .note-card-footer { display: flex; justify-content: space-between; align-items: center; }
+        .note-card-date { font-size: 0.72rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+        .tags { display: flex; gap: 4px; flex-wrap: wrap; }
+        .tag {
+          background: #2a2a1a;
+          border: 1px solid #4a4a1a;
+          color: var(--accent);
+          border-radius: 4px;
+          font-size: 0.7rem;
+          padding: 2px 6px;
+          font-family: 'DM Mono', monospace;
+          cursor: pointer;
+        }
+        .tag:hover { background: #3a3a1a; }
+
+        /* ── Note editor ── */
+        .editor {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          border-radius: var(--radius);
+          padding: 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          position: sticky;
+          top: 20px;
+        }
+        .editor h2 {
+          font-size: 0.85rem;
+          color: var(--muted);
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          font-family: 'DM Mono', monospace;
+          margin-bottom: 4px;
+        }
+        .editor-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .editor textarea { min-height: 200px; }
+
+        /* ── Pagination ── */
+        .pagination {
+          display: flex;
+          gap: 8px;
+          justify-content: center;
+          margin-top: 16px;
+          align-items: center;
+          font-size: 0.82rem;
+          color: var(--muted);
+          font-family: 'DM Mono', monospace;
+        }
+        .pagination button {
+          background: var(--surface);
+          border: 1px solid var(--border);
+          color: var(--text);
+          border-radius: 4px;
+          padding: 4px 10px;
+          cursor: pointer;
+          font-size: 0.8rem;
+        }
+        .pagination button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .pagination button:hover:not(:disabled) { border-color: var(--accent); }
+
+        input:-webkit-autofill,
+        input:-webkit-autofill:hover,
+        input:-webkit-autofill:focus,
+        textarea:-webkit-autofill {
+            -webkit-box-shadow: 0 0 0 1000px var(--bg) inset !important;
+            -webkit-text-fill-color: var(--text) !important;
+            transition: background-color 9999s ease-in-out 0s;
+        }
+
+        /* ── Empty state ── */
+        .empty { text-align: center; padding: 40px 0; color: var(--muted); font-size: 0.88rem; }
+        .empty .icon { font-size: 2rem; margin-bottom: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>// notes</h1>
+        <p id="header-sub">sign in to manage your notes</p>
+    </header>
+
+    <!-- ── AUTH ── -->
+    <div id="auth">
+        <div class="card">
+            <h2 id="auth-title">Login</h2>
+            <div class="field">
+                <label>Email</label>
+                <input type="email" id="auth-email" placeholder="you@example.com" />
+            </div>
+            <div class="field">
+                <label>Password</label>
+                <input type="password" id="auth-password" placeholder="••••••" />
+            </div>
+            <button class="btn btn-primary" onclick="submitAuth()">Continue →</button>
+            <div class="error-msg" id="auth-error"></div>
+        </div>
+        <div class="switch-link" id="switch-link">
+            No account? <span onclick="toggleMode()">Register</span>
+        </div>
+    </div>
+
+    <!-- ── APP ── -->
+    <div id="app">
+        <div class="topbar">
+            <div class="user-info">logged in as <span id="user-email"></span></div>
+            <button class="btn btn-ghost" onclick="logout()">logout</button>
+        </div>
+
+        <div class="toolbar">
+            <input type="text" id="search-input" placeholder="Search by title..." onkeydown="if(event.key==='Enter') searchNotes()" />
+            <button class="btn btn-sm" onclick="searchNotes()">Search</button>
+            <button class="btn btn-ghost" onclick="clearSearch()">Clear</button>
+            <button class="btn btn-sm" onclick="showNewNote()">+ New Note</button>
+        </div>
+
+        <div class="layout">
+            <!-- Note list -->
+            <div>
+                <div id="note-list"></div>
+                <div class="pagination" id="pagination"></div>
+            </div>
+
+            <!-- Editor -->
+            <div class="editor" id="editor" style="display:none">
+                <h2 id="editor-title">New Note</h2>
+                <div class="field">
+                    <label>Title</label>
+                    <input type="text" id="note-title" placeholder="Note title" />
+                </div>
+                <div class="field">
+                    <label>Content</label>
+                    <textarea id="note-content" placeholder="Write your note..."></textarea>
+                </div>
+                <div class="field">
+                    <label>Tags (comma separated)</label>
+                    <input type="text" id="note-tags" placeholder="e.g. work, ideas, spring" />
+                </div>
+                <div class="editor-actions">
+                    <button class="btn btn-ghost" onclick="closeEditor()">Cancel</button>
+                    <button class="btn btn-sm" onclick="saveNote()">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:9090/api';
+    let token = localStorage.getItem('notes_token') || null;
+    let isLogin = true;
+    let currentPage = 0;
+    let totalPages = 0;
+    let editingId = null;
+    let searchQuery = '';
+
+    if (token) showApp();
+
+    function toggleMode() {
+      isLogin = !isLogin;
+      document.getElementById('auth-title').textContent = isLogin ? 'Login' : 'Register';
+      document.getElementById('switch-link').innerHTML = isLogin
+        ? `No account? <span onclick="toggleMode()">Register</span>`
+        : `Have an account? <span onclick="toggleMode()">Login</span>`;
+      clearError();
+    }
+
+    async function submitAuth() {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value.trim();
+      if (!email || !password) return showError('Please fill in all fields');
+
+      const endpoint = isLogin ? '/auth/login' : '/auth/register';
+      try {
+        const res = await fetch(API + endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          const msg = data.error || data.password || data.email || 'Something went wrong';
+          return showError(typeof msg === 'object' ? JSON.stringify(msg) : msg);
+        }
+        token = data.token;
+        localStorage.setItem('notes_token', token);
+        showApp();
+      } catch (e) {
+        showError('Cannot reach server. Is the app running?');
+      }
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('auth-error');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+    function clearError() {
+      document.getElementById('auth-error').classList.remove('visible');
+    }
+
+    function showApp() {
+      document.getElementById('auth').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        document.getElementById('user-email').textContent = payload.sub;
+      } catch {}
+      loadNotes();
+    }
+
+    function logout() {
+      token = null;
+      localStorage.removeItem('notes_token');
+      document.getElementById('auth').style.display = 'block';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('auth-email').value = '';
+      document.getElementById('auth-password').value = '';
+    }
+
+    // ── Notes ──
+    async function loadNotes(page = 0) {
+      currentPage = page;
+      const list = document.getElementById('note-list');
+      list.innerHTML = '<div class="empty"><div class="icon">⟳</div>loading...</div>';
+
+      let url = `${API}/notes?page=${page}&size=8&sort=createdAt,desc`;
+      if (searchQuery) url = `${API}/notes/search?title=${encodeURIComponent(searchQuery)}&page=${page}&size=8`;
+
+      try {
+        const res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
+        if (res.status === 403) return logout();
+        const data = await res.json();
+        totalPages = data.totalPages;
+        renderNotes(data.content);
+        renderPagination(data);
+      } catch {
+        list.innerHTML = '<div class="empty">failed to load notes</div>';
+      }
+    }
+
+    function renderNotes(notes) {
+      const list = document.getElementById('note-list');
+      if (!notes || notes.length === 0) {
+        list.innerHTML = '<div class="empty"><div class="icon">✦</div>No notes yet. Create one!</div>';
+        return;
+      }
+      list.innerHTML = notes.map(note => `
+        <div class="note-card" id="card-${note.id}" onclick="selectNote(${note.id})">
+          <div class="note-card-title">${escHtml(note.title)}</div>
+          <div class="note-card-preview">${escHtml(note.content || 'No content')}</div>
+          <div class="note-card-footer">
+            <div class="tags">
+              ${(note.tags || []).map(t => `<span class="tag" onclick="event.stopPropagation(); filterByTag('${escHtml(t)}')">#${escHtml(t)}</span>`).join('')}
+            </div>
+            <div style="display:flex; gap:6px; align-items:center">
+              <span class="note-card-date">${formatDate(note.updatedAt)}</span>
+              <button class="btn btn-danger" onclick="event.stopPropagation(); deleteNote(${note.id})">✕</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderPagination(data) {
+      const el = document.getElementById('pagination');
+      if (data.totalPages <= 1) { el.innerHTML = ''; return; }
+      el.innerHTML = `
+        <button onclick="loadNotes(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>←</button>
+        <span>${currentPage + 1} / ${data.totalPages}</span>
+        <button onclick="loadNotes(${currentPage + 1})" ${currentPage >= data.totalPages - 1 ? 'disabled' : ''}>→</button>
+      `;
+    }
+
+    async function selectNote(id) {
+      document.querySelectorAll('.note-card').forEach(c => c.classList.remove('active'));
+      const card = document.getElementById('card-' + id);
+      if (card) card.classList.add('active');
+
+      try {
+        const res = await fetch(`${API}/notes/${id}`, { headers: { Authorization: 'Bearer ' + token } });
+        const note = await res.json();
+        editingId = id;
+        document.getElementById('editor-title').textContent = 'Edit Note';
+        document.getElementById('note-title').value = note.title;
+        document.getElementById('note-content').value = note.content || '';
+        document.getElementById('note-tags').value = (note.tags || []).join(', ');
+        document.getElementById('editor').style.display = 'flex';
+      } catch {}
+    }
+
+    function showNewNote() {
+      editingId = null;
+      document.querySelectorAll('.note-card').forEach(c => c.classList.remove('active'));
+      document.getElementById('editor-title').textContent = 'New Note';
+      document.getElementById('note-title').value = '';
+      document.getElementById('note-content').value = '';
+      document.getElementById('note-tags').value = '';
+      document.getElementById('editor').style.display = 'flex';
+      document.getElementById('note-title').focus();
+    }
+
+    function closeEditor() {
+      editingId = null;
+      document.getElementById('editor').style.display = 'none';
+      document.querySelectorAll('.note-card').forEach(c => c.classList.remove('active'));
+    }
+
+    async function saveNote() {
+      const title = document.getElementById('note-title').value.trim();
+      const content = document.getElementById('note-content').value.trim();
+      const tagsRaw = document.getElementById('note-tags').value.trim();
+      const tags = tagsRaw ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean) : [];
+
+      if (!title) return alert('Title is required');
+
+      const body = JSON.stringify({ title, content, tags });
+      const url = editingId ? `${API}/notes/${editingId}` : `${API}/notes`;
+      const method = editingId ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+          body
+        });
+        if (!res.ok) return;
+        closeEditor();
+        loadNotes(currentPage);
+      } catch {}
+    }
+
+    async function deleteNote(id) {
+      if (!confirm('Delete this note?')) return;
+      try {
+        await fetch(`${API}/notes/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        if (editingId === id) closeEditor();
+        loadNotes(currentPage);
+      } catch {}
+    }
+
+    function searchNotes() {
+      searchQuery = document.getElementById('search-input').value.trim();
+      loadNotes(0);
+    }
+
+    function clearSearch() {
+      searchQuery = '';
+      document.getElementById('search-input').value = '';
+      loadNotes(0);
+    }
+
+    async function filterByTag(tag) {
+      document.getElementById('search-input').value = '';
+      searchQuery = '';
+      const list = document.getElementById('note-list');
+      list.innerHTML = '<div class="empty">loading...</div>';
+      try {
+        const res = await fetch(`${API}/notes/tag/${encodeURIComponent(tag)}`, {
+          headers: { Authorization: 'Bearer ' + token }
+        });
+        const notes = await res.json();
+        document.getElementById('pagination').innerHTML = `<span>Tag: #${escHtml(tag)}</span> <button onclick="loadNotes(0)" style="margin-left:8px">✕ clear</button>`;
+        renderNotes(notes);
+      } catch {}
+    }
+
+    function formatDate(dt) {
+      if (!dt) return '';
+      return new Date(dt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+</script>
+</body>
+</html>
