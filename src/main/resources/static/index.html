@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Notes</title>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap"
+          rel="stylesheet"/>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -62,6 +63,17 @@
           text-transform: uppercase;
           letter-spacing: 1px;
           font-family: 'DM Mono', monospace;
+        }
+
+        .note-content {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+
+            line-height: 1.5;
+            max-height: calc(1.5em * 3);
         }
 
         .field { margin-bottom: 14px; }
@@ -254,11 +266,11 @@
             <h2 id="auth-title">Login</h2>
             <div class="field">
                 <label>Email</label>
-                <input type="email" id="auth-email" placeholder="you@example.com" />
+                <input type="email" id="auth-email" placeholder="you@example.com"/>
             </div>
             <div class="field">
                 <label>Password</label>
-                <input type="password" id="auth-password" placeholder="••••••" />
+                <input type="password" id="auth-password" placeholder="••••••"/>
             </div>
             <button class="btn btn-primary" onclick="submitAuth()">Continue →</button>
             <div class="error-msg" id="auth-error"></div>
@@ -276,7 +288,8 @@
         </div>
 
         <div class="toolbar">
-            <input type="text" id="search-input" placeholder="Search by title..." onkeydown="if(event.key==='Enter') searchNotes()" />
+            <input type="text" id="search-input" placeholder="Search by title..."
+                   onkeydown="if(event.key==='Enter') searchNotes()"/>
             <button class="btn btn-sm" onclick="searchNotes()">Search</button>
             <button class="btn btn-ghost" onclick="clearSearch()">Clear</button>
             <button class="btn btn-sm" onclick="showNewNote()">+ New Note</button>
@@ -294,7 +307,7 @@
                 <h2 id="editor-title">New Note</h2>
                 <div class="field">
                     <label>Title</label>
-                    <input type="text" id="note-title" placeholder="Note title" />
+                    <input type="text" id="note-title" placeholder="Note title"/>
                 </div>
                 <div class="field">
                     <label>Content</label>
@@ -302,7 +315,7 @@
                 </div>
                 <div class="field">
                     <label>Tags (comma separated)</label>
-                    <input type="text" id="note-tags" placeholder="e.g. work, ideas, spring" />
+                    <input type="text" id="note-tags" placeholder="e.g. work, ideas, spring"/>
                 </div>
                 <div class="editor-actions">
                     <button class="btn btn-ghost" onclick="closeEditor()">Cancel</button>
@@ -416,7 +429,13 @@
       list.innerHTML = notes.map(note => `
         <div class="note-card" id="card-${note.id}" onclick="selectNote(${note.id})">
           <div class="note-card-title">${escHtml(note.title)}</div>
-          <div class="note-card-preview">${escHtml(note.content || 'No content')}</div>
+          <div class="note-card-preview">
+              ${escHtml(
+                note.content && note.content.length > 60
+                  ? note.content.substring(0, 60) + '...'
+                  : (note.content || 'No content')
+              )}
+            </div>
           <div class="note-card-footer">
             <div class="tags">
               ${(note.tags || []).map(t => `<span class="tag" onclick="event.stopPropagation(); filterByTag('${escHtml(t)}')">#${escHtml(t)}</span>`).join('')}
