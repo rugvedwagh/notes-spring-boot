@@ -38,7 +38,16 @@ public class SecurityConfig {
                 )
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/api/",
+                                "/api/index.html"
+                        ).permitAll()
+
                         .requestMatchers("/auth/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(
